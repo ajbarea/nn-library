@@ -18,6 +18,7 @@ class TestNTK(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        torch.manual_seed(0)
         # Create a small model for testing. Include a variety of layer types deliberately.
         cls.model_bn = GraphModulePlus.new_from_trace(
             nn.Sequential(

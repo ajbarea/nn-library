@@ -20,6 +20,7 @@ def nancov(x):
 
 class TestPrincipalComponents(unittest.TestCase):
     def setUp(self):
+        torch.manual_seed(0)
         self.device = "cpu"
         self.dtype = torch.float64  # high precision for testing purposes
         self.dim = 5
