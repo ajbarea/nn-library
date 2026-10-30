@@ -57,6 +57,7 @@ class TestPrincipalComponents(unittest.TestCase):
         torch.testing.assert_close(pcs1.mean, pcs2.mean)
         torch.testing.assert_close(pcs1.cov, pcs2.cov)
 
+    @unittest.skipUnless(torch.cuda.is_available(), "needs CUDA")
     def test_devices(self):
         pcs_cpu = PrincipalComponents.from_data(self.data, center=True)
         pcs_gpu = PrincipalComponents.from_data(self.data.to("cuda:0"), center=True)

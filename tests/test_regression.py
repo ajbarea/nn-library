@@ -5,6 +5,10 @@ import torch
 
 from nn_lib.analysis.regression import safe_linalg_lstsq, StreamingLinearRegression, safe_regression
 
+DEVICES = ["cpu"]
+if torch.cuda.is_available():
+    DEVICES.append("cuda")
+
 
 def _generate_data(
     n_samples: int,
@@ -43,7 +47,7 @@ def _generate_data(
 
 class TestSafeLstsq(unittest.TestCase):
     def test_safe_regression(self):
-        for d_ in ["cpu", "cuda"]:
+        for d_ in DEVICES:
             for b_ in [False, True]:
                 for r_ in [None, 2]:
                     with self.subTest(f"device={d_} bias={b_} rank={r_}"):
@@ -57,7 +61,7 @@ class TestSafeLstsq(unittest.TestCase):
 
     def test_lstsq_xtx(self):
         b_ = False
-        for d_ in ["cpu", "cuda"]:
+        for d_ in DEVICES:
             for r_ in [None, 2]:
                 with self.subTest(f"device={d_} bias={b_} rank={r_}"):
                     x, y, true_w, true_b, x_test, y_test = _generate_data(
@@ -73,7 +77,7 @@ class TestSafeLstsq(unittest.TestCase):
 
 class TestStreamingRegression(unittest.TestCase):
     def test_batch_updates(self):
-        for d_ in ["cpu", "cuda"]:
+        for d_ in DEVICES:
             for r_ in [None, 2]:
                 with self.subTest(f"device={d_} rank={r_}"):
                     x, y, true_w, true_b, x_test, y_test = _generate_data(
@@ -98,7 +102,7 @@ class TestStreamingRegression(unittest.TestCase):
                     torch.testing.assert_close(slr1.mean_y, slr2.mean_y)
 
     def test_streaming_regression_batchwise_matches_lstsq(self):
-        for d_ in ["cpu", "cuda"]:
+        for d_ in DEVICES:
             for b_ in [False, True]:
                 for r_ in [None, 2]:
                     for ridge_ in [0.0, 1.0]:

@@ -10,6 +10,10 @@ from nn_lib.utils.stats import (
     RunningCovariance,
 )
 
+DEVICES = ["cpu"]
+if torch.cuda.is_available():
+    DEVICES.append("cuda")
+
 
 def mean_helper(x, centered):
     if centered:
@@ -35,7 +39,7 @@ def covariance_helper(x, y, centered):
 
 class TestStats(unittest.TestCase):
     def test_running_average_1(self):
-        for device in ["cpu", "cuda"]:
+        for device in DEVICES:
             with self.subTest(f"device={device}"):
                 values = torch.rand(10, device=device)
                 ra = RunningAverage()
@@ -44,7 +48,7 @@ class TestStats(unittest.TestCase):
                 assert_close(ra.avg, torch.mean(values))
 
     def test_running_average_batched(self):
-        for device in ["cpu", "cuda"]:
+        for device in DEVICES:
             with self.subTest(f"device={device}"):
                 values = torch.rand(10, device=device)
                 ra = RunningAverage()
@@ -53,7 +57,7 @@ class TestStats(unittest.TestCase):
                 assert_close(ra.avg, torch.mean(values))
 
     def test_covariance_x(self):
-        for device in ["cpu", "cuda"]:
+        for device in DEVICES:
             for centered in [False, True]:
                 with self.subTest(f"device={device}, centered={centered}"):
                     x = torch.rand((100, 2), device=device)
@@ -74,7 +78,7 @@ class TestStats(unittest.TestCase):
                     assert_close(rc.covariance, covariance_helper(x, x, centered=centered))
 
     def test_variance_vector_x(self):
-        for device in ["cpu", "cuda"]:
+        for device in DEVICES:
             for centered in [False, True]:
                 with self.subTest(f"device={device}, centered={centered}"):
                     x = torch.rand((100, 2), device=device)
@@ -95,7 +99,7 @@ class TestStats(unittest.TestCase):
                     assert_close(rv.variance, variance_helper(x, centered=centered))
 
     def test_variance_tensor_x(self):
-        for device in ["cpu", "cuda"]:
+        for device in DEVICES:
             for centered in [False, True]:
                 with self.subTest(f"device={device}, centered={centered}"):
                     x = torch.rand((100, 2, 3, 4), device=device)
@@ -116,7 +120,7 @@ class TestStats(unittest.TestCase):
                     assert_close(rv.variance, variance_helper(x, centered=centered))
 
     def test_covariance_xx(self):
-        for device in ["cpu", "cuda"]:
+        for device in DEVICES:
             for centered in [False, True]:
                 with self.subTest(f"device={device}, centered={centered}"):
                     x = torch.rand((100, 2), device=device)
@@ -137,7 +141,7 @@ class TestStats(unittest.TestCase):
                     assert_close(rc.covariance, covariance_helper(x, x, centered=centered))
 
     def test_covariance_xy(self):
-        for device in ["cpu", "cuda"]:
+        for device in DEVICES:
             for centered in [False, True]:
                 with self.subTest(f"device={device}, centered={centered}"):
                     x = torch.rand((100, 2), device=device)
