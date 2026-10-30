@@ -306,8 +306,9 @@ class TestLinalgUtils(unittest.TestCase):
                     result_ab = xval_nuc_norm_cross_cov(x, y, centered=True, method="ab")
                     assert_close(result_brute_force, result_ab)
 
-                    # In float32, swapping x and y moves the "ab" result by up to ~1e-2: its Gram
-                    # matrix squares the condition number (see xval_nuc_norm_cross_cov_ab).
+                    # Known float32 defect, so float64 only for now: when its first argument is the
+                    # wider one, as in (y, x) here, "ab" is off by up to ~70%. Its Gram matrix is
+                    # singular and the fixed eps=1e-12 clamp in inv_sqrt_spd is below float32 noise.
                     if dt == torch.float64:
                         result_ab_flipped = xval_nuc_norm_cross_cov(
                             y, x, centered=True, method="ab"
