@@ -9,6 +9,10 @@ DEVICES = ["cpu"]
 if torch.cuda.is_available():
     DEVICES.append("cuda")
 
+# float32 least squares on uncentered x misses the float32 defaults of assert_close
+# (atol=1e-5, rtol=1.3e-6) by up to 3x, depending on the random draw and the CPU's BLAS.
+LSTSQ_TOL = dict(atol=1e-4, rtol=1e-4)
+
 
 def _generate_data(
     n_samples: int,
@@ -60,9 +64,7 @@ class TestSafeLstsq(unittest.TestCase):
 
                         w, b = safe_regression(x, y, bias=b_)
 
-                        # float32 least squares on uncentered x: errors reach ~7e-5, above the
-                        # float32 defaults of assert_close (atol=1e-5, rtol=1.3e-6)
-                        torch.testing.assert_close(x_test @ w + b, y_test, atol=1e-4, rtol=1e-4)
+                        torch.testing.assert_close(x_test @ w + b, y_test, **LSTSQ_TOL)
 
     def test_lstsq_xtx(self):
         b_ = False
@@ -77,7 +79,7 @@ class TestSafeLstsq(unittest.TestCase):
                     solution2 = safe_linalg_lstsq(x.T @ x, x.T @ y, symmetric=True)
 
                     # Check that the solutions are close
-                    torch.testing.assert_close(solution1, solution2)
+                    torch.testing.assert_close(solution1, solution2, **LSTSQ_TOL)
 
 
 class TestStreamingRegression(unittest.TestCase):
@@ -129,4 +131,6 @@ class TestStreamingRegression(unittest.TestCase):
                             # Check that the solution matches lstsq
                             w2, b2 = safe_regression(x, y, bias=b_, ridge=ridge_)
 
-                            torch.testing.assert_close(x_test @ w + b, x_test @ w2 + b2)
+                            torch.testing.assert_close(
+                                x_test @ w + b, x_test @ w2 + b2, **LSTSQ_TOL
+                            )

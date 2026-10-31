@@ -307,8 +307,9 @@ class TestLinalgUtils(unittest.TestCase):
                     assert_close(result_brute_force, result_ab)
 
                     # Known float32 defect, so float64 only for now: when its first argument is the
-                    # wider one, as in (y, x) here, "ab" is off by up to ~70%. Its Gram matrix is
-                    # singular and the fixed eps=1e-12 clamp in inv_sqrt_spd is below float32 noise.
+                    # wider one, as in (y, x) here, "ab" is off by up to ~3e-3, about 10x the
+                    # float32 tolerance. The near-zero eigenvalue's noise (~1e-10) sits above the
+                    # fixed eps=1e-12 clamp in inv_sqrt_spd, so rsqrt amplifies it.
                     if dt == torch.float64:
                         result_ab_flipped = xval_nuc_norm_cross_cov(
                             y, x, centered=True, method="ab"
