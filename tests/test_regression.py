@@ -10,7 +10,7 @@ if torch.cuda.is_available():
     DEVICES.append("cuda")
 
 # float32 least squares on uncentered x misses the float32 defaults of assert_close
-# (atol=1e-5, rtol=1.3e-6) by up to 3x, depending on the random draw and the CPU's BLAS.
+# (atol=1e-5, rtol=1.3e-6) by 3-4x, depending on the random draw and the CPU's BLAS.
 LSTSQ_TOL = dict(atol=1e-4, rtol=1e-4)
 
 

@@ -38,6 +38,9 @@ def covariance_helper(x, y, centered):
 
 
 class TestStats(unittest.TestCase):
+    def setUp(self):
+        torch.manual_seed(0)
+
     def test_running_average_1(self):
         for device in DEVICES:
             with self.subTest(f"device={device}"):
@@ -180,8 +183,8 @@ class TestStats(unittest.TestCase):
         stable_cov_xy = centered_moments.covariance
 
         # Assert that the naive and stable estimators agree (which is expected as long as E[x] and
-        # E[y] are small)
-        assert_close(naive_cov_xy1, stable_cov_xy)
+        # E[y] are small). The naive estimator's float32 cancellation leaves up to ~1.1e-5.
+        assert_close(naive_cov_xy1, stable_cov_xy, atol=3e-5, rtol=0)
 
         # x2 and y2 are shifted copies of x1 and y1. This is expected to make E[x^2]-E[x]^2
         # numerically unstable.
@@ -198,8 +201,9 @@ class TestStats(unittest.TestCase):
         with self.assertRaises(AssertionError):
             assert_close(naive_cov_xy2, stable_cov_xy2)
 
-        # Assert that the stable estimates agree with each other
-        assert_close(stable_cov_xy, stable_cov_xy2)
+        # Assert that the stable estimates agree with each other. In float32, x1 + 1e3 rounds
+        # each input to a step of 6.1e-5, which moves the covariance by up to ~1.6e-5.
+        assert_close(stable_cov_xy, stable_cov_xy2, atol=5e-5, rtol=0)
 
     def test_running_variance(self):
         # 10 batches of 100 values each, with dimension 3
