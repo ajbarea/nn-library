@@ -172,10 +172,11 @@ class TestStats(unittest.TestCase):
         def _naive_cov(x_, y_):
             # Naive cov estimator is E[xy]-E[x]E[y], times n/(n-1) to match the dof=1 of
             # RunningCovariance(centered=True)
-            E_xy = x_.T @ y_ / 1000
+            n = x_.shape[0]
+            E_xy = x_.T @ y_ / n
             E_x = torch.mean(x_, dim=0)
             E_y = torch.mean(y_, dim=0)
-            return (E_xy - E_x[:, None] * E_y[None, :]) * 1000 / 999
+            return (E_xy - E_x[:, None] * E_y[None, :]) * n / (n - 1)
 
         # Get both the naive and stable cov estimators for x1 y1
         naive_cov_xy1 = _naive_cov(x1, y1)
