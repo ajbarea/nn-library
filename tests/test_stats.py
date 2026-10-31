@@ -170,11 +170,12 @@ class TestStats(unittest.TestCase):
         y1 = torch.rand((1000, 3))
 
         def _naive_cov(x_, y_):
-            # Naive cov estimator is E[xy]-E[x]E[y]
+            # Naive cov estimator is E[xy]-E[x]E[y], times n/(n-1) to match the dof=1 of
+            # RunningCovariance(centered=True)
             E_xy = x_.T @ y_ / 1000
             E_x = torch.mean(x_, dim=0)
             E_y = torch.mean(y_, dim=0)
-            return E_xy - E_x[:, None] * E_y[None, :]
+            return (E_xy - E_x[:, None] * E_y[None, :]) * 1000 / 999
 
         # Get both the naive and stable cov estimators for x1 y1
         naive_cov_xy1 = _naive_cov(x1, y1)
@@ -183,8 +184,8 @@ class TestStats(unittest.TestCase):
         stable_cov_xy = centered_moments.covariance
 
         # Assert that the naive and stable estimators agree (which is expected as long as E[x] and
-        # E[y] are small). The naive estimator's float32 cancellation leaves up to ~1.1e-5.
-        assert_close(naive_cov_xy1, stable_cov_xy, atol=3e-5, rtol=0)
+        # E[y] are small)
+        assert_close(naive_cov_xy1, stable_cov_xy)
 
         # x2 and y2 are shifted copies of x1 and y1. This is expected to make E[x^2]-E[x]^2
         # numerically unstable.
@@ -201,8 +202,8 @@ class TestStats(unittest.TestCase):
         with self.assertRaises(AssertionError):
             assert_close(naive_cov_xy2, stable_cov_xy2)
 
-        # Assert that the stable estimates agree with each other. In float32, x1 + 1e3 rounds
-        # each input to a step of 6.1e-5, which moves the covariance by up to ~1.6e-5.
+        # Assert that the stable estimates agree with each other. Float32 arithmetic in the running
+        # update at offset 1e3 (where float32 steps by 6.1e-5) leaves up to ~1.6e-5.
         assert_close(stable_cov_xy, stable_cov_xy2, atol=5e-5, rtol=0)
 
     def test_running_variance(self):
