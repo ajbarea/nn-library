@@ -134,3 +134,21 @@ class TestLRFinderAdam(TestLRFinderSGD):
         self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.01)
         self.criterion = lambda x, y, t: torch.nn.functional.mse_loss(y, t, reduction="mean")
         self.lr_finder = LRFinder(self.model, self.optimizer, self.criterion)
+
+    def test_lr_finder_alternate_criterion(self):
+        # Adam divides each step by the running RMS of the gradient, so scaling the loss by a
+        # constant leaves its steps, and the suggested learning rate, unchanged. (SGD's suggestion
+        # shrinks with the scale instead; see the parent class.)
+        def scaled_l1(scale):
+            return lambda x, y, t: scale * torch.nn.functional.l1_loss(y, t, reduction="mean")
+
+        suggestions = {}
+        for scale in (1, 2, 4):
+            self.lr_finder.criterion = scaled_l1(scale)
+            self._gen_data_and_run(seed=4782481)
+            suggestions[scale] = self.lr_finder.suggestion()
+            self.assertGreater(suggestions[scale], 1e-7)
+            self.assertLess(suggestions[scale], 1e2)
+
+        torch.testing.assert_close(suggestions[2], suggestions[1], atol=0.0, rtol=0.1)
+        torch.testing.assert_close(suggestions[4], suggestions[1], atol=0.0, rtol=0.1)
