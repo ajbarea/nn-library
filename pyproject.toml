@@ -37,7 +37,9 @@ dependencies = [
     "scipy",
     "seaborn",
     "tabulate",
+    "torch",
     "torchmetrics",
+    "torchvision",
     "tqdm",
 ]
 
@@ -52,7 +54,7 @@ cpu = [
     "torch>=2.11.0",
     "torchvision>=0.26.0",
 ]
-cu130 = [
+cu134 = [
     "torch>=2.11.0",
     "torchvision>=0.26.0",
 ]
@@ -61,18 +63,18 @@ cu130 = [
 conflicts = [
     [
         { extra = "cpu" },
-        { extra = "cu130" },
+        { extra = "cu134" },
     ],
 ]
 
 [tool.uv.sources]
 torch = [
     { index = "pytorch-cpu", extra = "cpu" },
-    { index = "pytorch-cu130", extra = "cu130" },
+    { index = "pytorch-cu134", extra = "cu134" },
 ]
 torchvision = [
     { index = "pytorch-cpu", extra = "cpu" },
-    { index = "pytorch-cu130", extra = "cu130" },
+    { index = "pytorch-cu134", extra = "cu134" },
 ]
 
 [[tool.uv.index]]
@@ -81,14 +83,17 @@ url = "https://download.pytorch.org/whl/cpu"
 explicit = true
 
 [[tool.uv.index]]
-name = "pytorch-cu130"
-url = "https://download.pytorch.org/whl/cu130"
+name = "pytorch-cu134"
+url = "https://download.pytorch.org/whl/cu134"
 explicit = true
 
 [project.urls]
 Repository = "https://github.com/bonsai-neuro-ai/nn-library"
 
 [tool.black]
+line-length = 100
+
+[tool.ruff]
 line-length = 100
 
 [tool.interrogate]
