@@ -1,7 +1,9 @@
 import unittest
 from functools import partial
 from math import log2
+from unittest.mock import patch
 
+import matplotlib.pyplot as plt
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -76,7 +78,9 @@ class TestLRFinderSGD(unittest.TestCase):
 
     def test_select_lr(self):
         self._gen_data_and_run()
-        self.lr_finder.plot()
+        with patch("matplotlib.pyplot.show"):  # plot() ends in plt.show(), which can block
+            self.lr_finder.plot()
+        plt.close("all")
         lr = self.lr_finder.suggestion()
 
         self.assertGreater(lr, 1e-7)
@@ -84,7 +88,9 @@ class TestLRFinderSGD(unittest.TestCase):
 
     def test_lr_finder_alternate_criterion(self):
         # Overwrite with a different criterion (L1 loss) and test if the LR finder still works
-        self.lr_finder.criterion = lambda x, y, t: torch.nn.functional.l1_loss(y, t, reduction="mean")
+        self.lr_finder.criterion = lambda x, y, t: torch.nn.functional.l1_loss(
+            y, t, reduction="mean"
+        )
         self._gen_data_and_run(seed=4782481)
         lr1 = self.lr_finder.suggestion()
 

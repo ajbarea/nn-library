@@ -10,6 +10,10 @@ from nn_lib.utils.stats import (
     RunningCovariance,
 )
 
+DEVICES = ["cpu"]
+if torch.cuda.is_available():
+    DEVICES.append("cuda")
+
 
 # Only test on CUDA when a GPU is present, so the suite still passes on CPU-only machines.
 DEVICES = ["cpu"] + (["cuda"] if torch.cuda.is_available() else [])
@@ -171,11 +175,13 @@ class TestStats(unittest.TestCase):
         y1 = torch.rand((1000, 3))
 
         def _naive_cov(x_, y_):
-            # Naive cov estimator is E[xy]-E[x]E[y]
-            E_xy = x_.T @ y_ / 1000
+            # Naive cov estimator is E[xy]-E[x]E[y], times n/(n-1) to match the dof=1 of
+            # RunningCovariance(centered=True)
+            n = x_.shape[0]
+            E_xy = x_.T @ y_ / n
             E_x = torch.mean(x_, dim=0)
             E_y = torch.mean(y_, dim=0)
-            return E_xy - E_x[:, None] * E_y[None, :]
+            return (E_xy - E_x[:, None] * E_y[None, :]) * n / (n - 1)
 
         # Get both the naive and stable cov estimators for x1 y1
         naive_cov_xy1 = _naive_cov(x1, y1)
@@ -202,8 +208,9 @@ class TestStats(unittest.TestCase):
         with self.assertRaises(AssertionError):
             assert_close(naive_cov_xy2, stable_cov_xy2)
 
-        # Assert that the stable estimates agree with each other
-        assert_close(stable_cov_xy, stable_cov_xy2)
+        # Assert that the stable estimates agree with each other. Float32 arithmetic in the running
+        # update at offset 1e3 (where float32 steps by 6.1e-5) leaves up to ~1.6e-5.
+        assert_close(stable_cov_xy, stable_cov_xy2, atol=5e-5, rtol=0)
 
     def test_running_variance(self):
         # 10 batches of 100 values each, with dimension 3
