@@ -136,9 +136,8 @@ class TestLRFinderAdam(TestLRFinderSGD):
         self.lr_finder = LRFinder(self.model, self.optimizer, self.criterion)
 
     def test_lr_finder_alternate_criterion(self):
-        # Adam divides each step by the running RMS of the gradient, so scaling the loss by a
-        # constant leaves its steps, and the suggested learning rate, unchanged. (SGD's suggestion
-        # shrinks with the scale instead; see the parent class.)
+        # Adam normalizes each step by the gradient's size, so scaling the loss by a constant
+        # leaves the suggested learning rate unchanged (unlike SGD, tested in the parent class).
         def scaled_l1(scale):
             return lambda x, y, t: scale * torch.nn.functional.l1_loss(y, t, reduction="mean")
 
